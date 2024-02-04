@@ -44,9 +44,20 @@ func (b *Board) InsertEntity(e Entity, p Position) bool {
 	if !b.IsValidPosition(p) {
 		return false
 	}
+
 	if b.GetEntity(p) != EMPTY {
 		return false
 	}
+
+	b.entities[p.row][p.col] = e
+	return true
+}
+
+func (b *Board) UpdateEntity(e Entity, p Position) bool {
+	if !b.IsValidPosition(p) {
+		return false
+	}
+
 	b.entities[p.row][p.col] = e
 	return true
 }
@@ -58,6 +69,9 @@ func (b *Board) GetEntity(p Position) Entity {
 	return b.entities[p.row][p.col]
 }
 
+/**
+ * Player manipulation methods
+ */
 func (b *Board) SetPlayer(player *Player) bool {
 	if b.player != nil {
 		return false
@@ -85,6 +99,22 @@ func (b *Board) MovePlayerDown() *Board {
 	b.player.position.row++
 	if b.player.position.row == b.Height() {
 		b.player.position.row = 0
+	}
+	return b
+}
+
+func (b *Board) MovePlayerLeft() *Board {
+	b.player.position.col--
+	if b.player.position.col < 0 {
+		b.player.position.col = b.Width() - 1
+	}
+	return b
+}
+
+func (b *Board) MovePlayerRight() *Board {
+	b.player.position.col++
+	if b.player.position.col == b.Width() {
+		b.player.position.col = 0
 	}
 	return b
 }
