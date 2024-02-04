@@ -17,17 +17,17 @@ var screen *tview.Table
 var board *Board
 
 func main() {
-	initCh := make(chan struct{})
 	gameLoop := gyro.NewLoop().
 		SetDebug(true).
 		SetTargetFps(30).
 		SetUpdateFunc(update).
 		SetRenderFunc(render)
 
+	initCh := make(chan struct{})
 	go initialize(initCh)
 
-	// Initialization must finish before game loop starts
-	// to avoid using nil pointers
+	// Initialization must finish before game loop
+	// starts to avoid using nil pointers
 	<-initCh
 	gameLoop.Start()
 }
@@ -62,30 +62,34 @@ func input(event *tcell.EventKey) *tcell.EventKey {
 		board.MovePlayerUp()
 	case tcell.KeyDown:
 		board.MovePlayerDown()
+	case tcell.KeyLeft:
+		board.MovePlayerLeft()
+	case tcell.KeyRight:
+		board.MovePlayerRight()
 	}
 
 	return nil
 }
 
 func update(deltaTime time.Duration) {
-	screen.Box.SetTitle(string(deltaTime.Milliseconds()))
+	player, hasPlayer := board.GetPlayer()
+	if hasPlayer {
+		board.UpdateEntity(player.GetEntity(), player.GetPosition())
+	}
 }
 
 func render() {
-	player, hasPlayer := board.GetPlayer()
 	game.QueueUpdateDraw(func() {
 		for row := range board.entities {
 			for col := range board.entities[row] {
-				position := Position{row, col}
-				var cellValue string
-				if hasPlayer && player.IsAt(position) {
-					cellValue = string(player.GetEntity())
-				} else {
-					cellValue = string(board.GetEntity(position))
-				}
-
-				screen.SetCell(row, col, tview.NewTableCell(cellValue))
+				renderCell(row, col)
 			}
 		}
 	})
+}
+
+func renderCell(row, col int) {
+	screen.SetCell(row, col, tview.NewTableCell(
+		string(board.GetEntity(Position{row, col})),
+	))
 }
