@@ -1,12 +1,22 @@
 package main
 
+const (
+	DEFAULT_PLAYER_SPEED = 10
+)
+
 type Player struct {
 	entity   Entity
 	position Position
+
+	speed int
 }
 
 func NewPlayer(e Entity, p Position) *Player {
-	return &Player{e, p}
+	return &Player{
+		entity:   e,
+		position: p,
+		speed:    DEFAULT_PLAYER_SPEED,
+	}
 }
 
 func (p *Player) GetEntity() Entity {
