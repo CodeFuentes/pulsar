@@ -1,31 +1,17 @@
 package main
 
-const (
-	MIN_WIDTH  = 20
-	MIN_HEIGHT = 5
-)
-
 type Board struct {
 	entities [][]Entity
 	player   *Player
 }
 
-type Position struct {
-	row int
-	col int
-}
-
 func NewBoard(width, height int) *Board {
-	width, height = max(width, MIN_WIDTH), max(height, MIN_HEIGHT)
-
 	b := &Board{
 		entities: make([][]Entity, height),
 	}
-
 	for i := range b.entities {
 		b.entities[i] = NewEmptyBoardRow(width)
 	}
-
 	return b
 }
 
@@ -53,11 +39,22 @@ func (b *Board) InsertEntity(e Entity, p Position) bool {
 	return true
 }
 
+func (b *Board) RemoveEntity(p Position) bool {
+	if !b.IsValidPosition(p) {
+		return false
+	}
+	b.entities[p.row][p.col] = EMPTY
+	return true
+}
+
 func (b *Board) UpdateEntity(e Entity, p Position) bool {
 	if !b.IsValidPosition(p) {
 		return false
 	}
-
+	currentEntityPos, ok := b.GetEntityPosition(e)
+	if ok {
+		b.RemoveEntity(currentEntityPos)
+	}
 	b.entities[p.row][p.col] = e
 	return true
 }
@@ -67,6 +64,17 @@ func (b *Board) GetEntity(p Position) Entity {
 		return EMPTY
 	}
 	return b.entities[p.row][p.col]
+}
+
+func (b *Board) GetEntityPosition(e Entity) (Position, bool) {
+	for row := range b.entities {
+		for col := range b.entities[row] {
+			if b.entities[row][col] == e {
+				return Position{row, col}, true
+			}
+		}
+	}
+	return Position{}, false
 }
 
 /**
@@ -89,32 +97,32 @@ func (b *Board) GetPlayer() (*Player, bool) {
 
 func (b *Board) MovePlayerUp() *Board {
 	b.player.position.row--
-	if b.player.position.row < 0 {
-		b.player.position.row = b.Height() - 1
+	if b.entities[b.player.position.row][b.player.position.col].IsBorder() {
+		b.player.position.row = b.Height() - 1 - BORDER_WIDTH
 	}
 	return b
 }
 
 func (b *Board) MovePlayerDown() *Board {
 	b.player.position.row++
-	if b.player.position.row == b.Height() {
-		b.player.position.row = 0
+	if b.entities[b.player.position.row][b.player.position.col].IsBorder() {
+		b.player.position.row = 0 + BORDER_WIDTH
 	}
 	return b
 }
 
 func (b *Board) MovePlayerLeft() *Board {
 	b.player.position.col--
-	if b.player.position.col < 0 {
-		b.player.position.col = b.Width() - 1
+	if b.entities[b.player.position.row][b.player.position.col].IsBorder() {
+		b.player.position.col = b.Width() - 1 - BORDER_WIDTH
 	}
 	return b
 }
 
 func (b *Board) MovePlayerRight() *Board {
 	b.player.position.col++
-	if b.player.position.col == b.Width() {
-		b.player.position.col = 0
+	if b.entities[b.player.position.row][b.player.position.col].IsBorder() {
+		b.player.position.col = 0 + BORDER_WIDTH
 	}
 	return b
 }

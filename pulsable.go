@@ -1,42 +1,30 @@
 package main
 
-import (
-	"math/rand"
-)
-
 type Pulsable struct {
 	body     string
 	position Position
+	speed    int
 }
 
 func NewPulsable(body string, position Position) *Pulsable {
 	return &Pulsable{
-		body,
-		position,
+		body:     body,
+		position: position,
 	}
 }
 
-func NewRandomPulsable(position Position) *Pulsable {
-	return NewPulsable(
-		Pulsables[rand.Intn(len(Pulsables))],
-		position,
-	)
+func (p Pulsable) Position() Position {
+	return p.position
 }
 
-var Pulsables []string = []string{
-	"bin",
-	"mobile",
-	"eternal",
-	"roar",
-	"brode",
-	"cheap",
-	"accumulation",
-	"zero",
-	"sport",
-	"conviction",
-	"jaw",
-	"misplace",
-	"profound",
-	"grand",
-	"hide",
+func (p Pulsable) Speed() int {
+	return p.speed
+}
+
+func (p Pulsable) Body() string {
+	return p.body
+}
+
+func (p Pulsable) Len() int {
+	return len(p.body)
 }

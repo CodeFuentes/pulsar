@@ -3,7 +3,7 @@ module github.com/codefuentes/pulsar
 go 1.21.6
 
 require (
-	github.com/codefuentes/gyro v0.0.0-20240201063425-6d8b46cf7497
+	github.com/codefuentes/gyro v0.0.0-20240722010721-78da81bc8d19
 	github.com/gdamore/tcell/v2 v2.6.1-0.20231203215052-2917c3801e73
 	github.com/rivo/tview v0.0.0-20240201191747-007cbb1d1344
 )
