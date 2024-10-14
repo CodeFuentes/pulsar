@@ -27,7 +27,7 @@ func (b *Board) Height() int {
 }
 
 func (b *Board) InsertEntity(e Entity, p Position) bool {
-	if !b.IsValidPosition(p) {
+	if !b.EntityHasValidPosition(e) {
 		return false
 	}
 
@@ -40,7 +40,7 @@ func (b *Board) InsertEntity(e Entity, p Position) bool {
 }
 
 func (b *Board) RemoveEntity(p Position) bool {
-	if !b.IsValidPosition(p) {
+	if !b.IsPositionEmpty(p) {
 		return false
 	}
 	b.entities[p.row][p.col] = EMPTY
@@ -48,7 +48,7 @@ func (b *Board) RemoveEntity(p Position) bool {
 }
 
 func (b *Board) UpdateEntity(e Entity, p Position) bool {
-	if !b.IsValidPosition(p) {
+	if !b.IsPositionEmpty(p) {
 		return false
 	}
 	currentEntityPos, ok := b.GetEntityPosition(e)
@@ -60,10 +60,11 @@ func (b *Board) UpdateEntity(e Entity, p Position) bool {
 }
 
 func (b *Board) GetEntity(p Position) Entity {
-	if !b.IsValidPosition(p) {
-		return EMPTY
-	}
 	return b.entities[p.row][p.col]
+}
+
+func (b *Board) IsPositionEmpty(p Position) bool {
+	return b.GetEntity(p).IsEmpty()
 }
 
 func (b *Board) GetEntityPosition(e Entity) (Position, bool) {
@@ -127,8 +128,15 @@ func (b *Board) MovePlayerRight() *Board {
 	return b
 }
 
-func (b *Board) IsValidPosition(p Position) bool {
-	return p.col >= 0 && p.row >= 0 && b.Width() > 0 && p.col < b.Width() && p.row < b.Height()
+func (b *Board) EntityHasValidPosition(e Entity) bool {
+	p, ok := b.GetEntityPosition(e)
+	if !ok {
+		return false
+	}
+	isWithinBorders := p.col >= 0 && p.row >= 0 && b.Width() > 0 && p.col < b.Width() && p.row < b.Height()
+	hasCollision := b.IsPositionEmpty(p)
+
+	return isWithinBorders && !hasCollision
 }
 
 func (b *Board) GetDefaultPlayerPosition() Position {

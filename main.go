@@ -72,7 +72,7 @@ func initialize(done chan struct{}) {
 	screen = tview.NewTable().
 		SetBorders(false)
 
-	screen.Box.SetBorder(false).SetTitle(WINDOW_TITLE)
+	screen.Box.SetBorder(true).SetTitle(WINDOW_TITLE)
 
 	game = tview.NewApplication().
 		SetRoot(screen, true).
@@ -118,8 +118,15 @@ func input(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyEsc:
 		game.Stop()
 		exit(nil)
+	case tcell.KeyRune:
+		r := event.Rune()
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			player, ok := board.GetPlayer()
+			if ok {
+				player.Shoot(Entity(r))
+			}
+		}
 	}
-
 	return nil
 }
 

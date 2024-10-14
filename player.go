@@ -35,3 +35,8 @@ func (p *Player) SetPosition(position Position) *Player {
 func (p *Player) IsAt(position Position) bool {
 	return position.row == p.position.row && position.col == p.position.col
 }
+
+func (p *Player) Shoot(e Entity) {
+	ePos := NewPosition(p.position.row+1, p.position.col)
+	board.InsertEntity(e, ePos)
+}
