@@ -39,7 +39,7 @@ func (b *Board) SetGenerator(gen IGenerator) {
 			case <-time.After(b.generator.GetGenSpeed()):
 				p := NewPosition(rand.Intn(b.Height()-1)+1, b.Width()-1)
 				pulsable := NewRandomPulsable(p)
-				b.PulsableHandler(pulsable)
+				go b.PulsableHandler(pulsable)
 			case <-b.stopGen:
 				break GEN
 			}
