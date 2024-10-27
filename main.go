@@ -72,7 +72,7 @@ func initialize(done chan struct{}) {
 	screen = tview.NewTable().
 		SetBorders(false)
 
-	screen.Box.SetBorder(true).SetTitle(WINDOW_TITLE)
+	screen.Box.SetTitle(WINDOW_TITLE)
 
 	game = tview.NewApplication().
 		SetRoot(screen, true).
@@ -95,6 +95,7 @@ func initialize(done chan struct{}) {
 
 	player := NewPlayer(PLAYER, board.GetDefaultPlayerPosition())
 	board.SetPlayer(player)
+	board.SetGenerator(NewDefaultGenerator(board))
 
 	// Done initializing
 	close(done)
@@ -106,6 +107,13 @@ func initialize(done chan struct{}) {
 
 func input(event *tcell.EventKey) *tcell.EventKey {
 
+	player, ok := board.GetPlayer()
+	if !ok {
+		panic("no player set")
+	}
+
+	currentPlayerPosition := player.GetPosition()
+	board.RemoveEntity(currentPlayerPosition)
 	switch event.Key() {
 	case tcell.KeyUp:
 		board.MovePlayerUp()
@@ -121,12 +129,17 @@ func input(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyRune:
 		r := event.Rune()
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			player, ok := board.GetPlayer()
-			if ok {
-				player.Shoot(Entity(r))
-			}
+			player.Shoot(Entity(r))
 		}
 	}
+
+	/*switch event.Key() {
+	case tcell.KeyUp,
+		tcell.KeyDown,
+		tcell.KeyLeft,
+		tcell.KeyRight:
+		player.SetPosition()
+	}*/
 	return nil
 }
 

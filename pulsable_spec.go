@@ -1,28 +1,19 @@
 package main
 
-import "math/rand"
-
-func NewRandomPulsable(position Position) *Pulsable {
-	return NewPulsable(
-		Pulsables[rand.Intn(len(Pulsables))],
-		position,
-	)
-}
-
 var Pulsables []string = []string{
+	"accumulation",
 	"bin",
-	"mobile",
-	"eternal",
-	"roar",
 	"brode",
 	"cheap",
-	"accumulation",
-	"zero",
-	"sport",
 	"conviction",
-	"jaw",
-	"misplace",
-	"profound",
+	"eternal",
 	"grand",
 	"hide",
+	"jaw",
+	"misplace",
+	"mobile",
+	"profound",
+	"roar",
+	"sport",
+	"zero",
 }

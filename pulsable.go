@@ -13,15 +13,19 @@ func NewPulsable(body string, position Position) *Pulsable {
 	}
 }
 
-func (p Pulsable) Position() Position {
+func (p *Pulsable) SetPosition(pos Position) {
+	p.position = pos
+}
+
+func (p Pulsable) GetPosition() Position {
 	return p.position
 }
 
-func (p Pulsable) Speed() int {
+func (p Pulsable) GetSpeed() int {
 	return p.speed
 }
 
-func (p Pulsable) Body() string {
+func (p Pulsable) GetBody() string {
 	return p.body
 }
 

@@ -1,36 +1,41 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 )
 
-const (
-	_DEFAULT_SPEED = 1500 * time.Millisecond
-)
-
-type PulsableGenerator interface {
-	SetGenSpeed(genSpeed time.Duration)
-	GetGenSpeed() time.Duration
+type PulsableGenerator struct {
+	*Generator
 }
 
 type DefaultPulsableGenerator struct {
-	PulsableGenerator
-
-	genSpeed time.Duration
-	board    Board
+	*PulsableGenerator
 }
 
-func NewDefaultGenerator(b Board) DefaultPulsableGenerator {
-	return DefaultPulsableGenerator{
-		genSpeed: _DEFAULT_SPEED,
-		board:    b,
+func NewDefaultGenerator(b *Board) *DefaultPulsableGenerator {
+	return &DefaultPulsableGenerator{
+		PulsableGenerator: NewPulsableGenerator(_DEFAULT_SPEED, b),
 	}
 }
 
-func (g *DefaultPulsableGenerator) SetGenSpeed(genSpeed time.Duration) {
+func NewPulsableGenerator(s time.Duration, b *Board) *PulsableGenerator {
+	return &PulsableGenerator{
+		NewGenerator(s, b),
+	}
+}
+
+func (g *PulsableGenerator) SetGenSpeed(genSpeed time.Duration) {
 	g.genSpeed = genSpeed
 }
 
-func (g DefaultPulsableGenerator) GetGenSpeed() time.Duration {
+func (g PulsableGenerator) GetGenSpeed() time.Duration {
 	return g.genSpeed
+}
+
+func NewRandomPulsable(position Position) *Pulsable {
+	return NewPulsable(
+		Pulsables[rand.Intn(len(Pulsables))],
+		position,
+	)
 }
