@@ -49,10 +49,10 @@ func (b *Board) SetGenerator(gen IGenerator) {
 
 func (b *Board) PulsableHandler(p *Pulsable) {
 	firstPrintedAll := false
-	for i := 0; i < b.Width()-1; i++ {
+	for i := 1; i < b.Width()-1; i++ {
 		row, col := p.GetPosition().Row(), p.GetPosition().Col()
 		printedAll := b.InsertPulsable(*p, p.GetPosition())
-		p.SetPosition(NewPosition(row, col-i))
+		p.SetPosition(NewPosition(row, col-1))
 		if printedAll {
 			if firstPrintedAll {
 				endPos := NewPosition(row, col+p.Len())
