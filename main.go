@@ -6,52 +6,108 @@ import (
 	"os"
 	"time"
 
-	"github.com/codefuentes/gyro"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 const (
 	WINDOW_TITLE = "PULSAR"
 
-	BORDER_WIDTH = 1
+	FONT_SIZE_WIDTH  = 8
+	FONT_SIZE_HEIGHT = 14
 )
 
-var game *tview.Application
-var screen *tview.Table
-var board *Board
+type Game struct{}
+
+var _BOARD *Board
+var b []rune
+var lastUpdate time.Time
+
+func (g *Game) Update() error {
+	if time.Since(lastUpdate) > time.Millisecond*300 {
+		player, hasPlayer := _BOARD.GetPlayer()
+		if hasPlayer {
+			_BOARD.UpdateEntity(player.GetEntity(), player.GetPosition())
+		}
+
+		b = []rune{}
+		for row := range _BOARD.entities {
+			for col := range _BOARD.entities[row] {
+				entity := _BOARD.entities[row][col]
+				b = append(b, rune(entity))
+			}
+			b = append(b, '\n')
+		}
+		lastUpdate = time.Now()
+	}
+	return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+	ebitenutil.DebugPrintAt(screen, string(b), 0, 0)
+}
+
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return _BOARD.Width() * FONT_SIZE_WIDTH, _BOARD.Height() * FONT_SIZE_HEIGHT
+}
 
 func main() {
-	recoverFunc := func(rvr any) { exit(fmt.Errorf("%v", rvr)) }
-	defer func() {
-		if rvr := recover(); rvr != nil {
-			recoverFunc(rvr)
-		}
-	}()
+	_BOARD = NewBoard(60, 30)
+	// player := NewPlayer(PLAYER, _BOARD.GetDefaultPlayerPosition())
+	player := NewPlayer(PLAYER, NewPosition(0, 0))
+	_BOARD.SetPlayer(player)
+	_BOARD.SetGenerator(NewDefaultGenerator(_BOARD)) // TODO: Refactor
 
-	gameLoop := gyro.NewLoop().
-		SetDebug(true).
-		SetTargetFps(30).
-		SetUpdateFunc(update).
-		SetRenderFunc(render).
-		SetRecoverFunc(recoverFunc)
+	ebiten.SetWindowSize(1024, 512)
+	ebiten.SetWindowTitle(WINDOW_TITLE)
 
-	initCh := make(chan struct{})
-	go initialize(initCh)
-
-	// Initialization must finish before game loop
-	// starts to avoid using nil pointers
-	<-initCh
-	err := gameLoop.Start()
-	exit(err)
+	ebiten.SetTPS(30)
+	if err := ebiten.RunGame(&Game{}); err != nil {
+		log.Fatal(err)
+		exit(err)
+	}
 }
+
+/*
+func input(event *tcell.EventKey) *tcell.EventKey {
+
+		player, ok := _BOARD.GetPlayer()
+		if !ok {
+			panic("no player set")
+		}
+
+		currentPlayerPosition := player.GetPosition()
+		_BOARD.RemoveEntity(currentPlayerPosition)
+		switch event.Key() {
+		case tcell.KeyUp:
+			_BOARD.MovePlayerUp()
+		case tcell.KeyDown:
+			_BOARD.MovePlayerDown()
+		case tcell.KeyLeft:
+			_BOARD.MovePlayerLeft()
+		case tcell.KeyRight:
+			_BOARD.MovePlayerRight()
+		case tcell.KeyEsc:
+			game.Stop()
+			exit(nil)
+		case tcell.KeyRune:
+			r := event.Rune()
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+				player.Shoot(Entity(r))
+			}
+		}
+
+		return nil
+	}
+*/
 
 func exit(err error) {
 	if err != nil {
 		fmt.Println(err)
 		writeToFile(err.Error())
+	} else {
+		writeToFile("No error.")
 	}
-	writeToFile("No error.")
 	fmt.Println("Press any button to exit...")
 }
 
@@ -66,108 +122,4 @@ func writeToFile(msg string) {
 	if err != nil {
 		log.Fatal("Cannot write to file", err)
 	}
-}
-
-func initialize(done chan struct{}) {
-	screen = tview.NewTable().
-		SetBorders(false)
-
-	screen.Box.SetTitle(WINDOW_TITLE)
-
-	game = tview.NewApplication().
-		SetRoot(screen, true).
-		SetInputCapture(input)
-
-	width, height := 50+BORDER_WIDTH, 25+BORDER_WIDTH
-	board = NewBoard(width, height)
-
-	for row := 0; row < board.Height(); row++ {
-		endCol := board.Width() - 1
-		for col := 0; col <= endCol; col++ {
-			if col == 0 || col == endCol {
-				board.entities[row][col] = BORDER_Y
-			}
-			if row == 0 || row == board.Height()-1 {
-				board.entities[row][col] = BORDER_X
-			}
-		}
-	}
-
-	player := NewPlayer(PLAYER, board.GetDefaultPlayerPosition())
-	board.SetPlayer(player)
-	board.SetGenerator(NewDefaultGenerator(board))
-
-	// Done initializing
-	close(done)
-
-	if err := game.Run(); err != nil {
-		panic(err)
-	}
-}
-
-func input(event *tcell.EventKey) *tcell.EventKey {
-
-	player, ok := board.GetPlayer()
-	if !ok {
-		panic("no player set")
-	}
-
-	currentPlayerPosition := player.GetPosition()
-	board.RemoveEntity(currentPlayerPosition)
-	switch event.Key() {
-	case tcell.KeyUp:
-		board.MovePlayerUp()
-	case tcell.KeyDown:
-		board.MovePlayerDown()
-	case tcell.KeyLeft:
-		board.MovePlayerLeft()
-	case tcell.KeyRight:
-		board.MovePlayerRight()
-	case tcell.KeyEsc:
-		game.Stop()
-		exit(nil)
-	case tcell.KeyRune:
-		r := event.Rune()
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			player.Shoot(Entity(r))
-		}
-	}
-
-	/*switch event.Key() {
-	case tcell.KeyUp,
-		tcell.KeyDown,
-		tcell.KeyLeft,
-		tcell.KeyRight:
-		player.SetPosition()
-	}*/
-	return nil
-}
-
-func update(deltaTime time.Duration) {
-	player, hasPlayer := board.GetPlayer()
-	if hasPlayer {
-		board.UpdateEntity(player.GetEntity(), player.GetPosition())
-	}
-}
-
-func render() {
-	game.QueueUpdateDraw(func() {
-		for row := range board.entities {
-			for col := range board.entities[row] {
-				renderCellFromBoard(row, col)
-			}
-		}
-	})
-}
-
-/*func renderCell(row, col int, entity Entity) {
-	screen.SetCell(row, col, tview.NewTableCell(
-		entity.String(),
-	))
-}*/
-
-func renderCellFromBoard(row, col int) {
-	screen.SetCell(row, col, tview.NewTableCell(
-		string(board.GetEntity(Position{row, col})),
-	))
 }

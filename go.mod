@@ -1,19 +1,16 @@
 module github.com/codefuentes/pulsar
 
-go 1.21.6
+go 1.22.0
+
+toolchain go1.22.8
+
+require github.com/hajimehoshi/ebiten/v2 v2.8.2
 
 require (
-	github.com/codefuentes/gyro v0.0.0-20240722010721-78da81bc8d19
-	github.com/gdamore/tcell/v2 v2.6.1-0.20231203215052-2917c3801e73
-	github.com/rivo/tview v0.0.0-20240201191747-007cbb1d1344
-)
-
-require (
-	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
-	github.com/rivo/uniseg v0.4.7-0.20240127222946-601bbb3750c2 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.9.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	github.com/ebitengine/gomobile v0.0.0-20240911145611-4856209ac325 // indirect
+	github.com/ebitengine/hideconsole v1.0.0 // indirect
+	github.com/ebitengine/purego v0.8.0 // indirect
+	github.com/jezek/xgb v1.1.1 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 )

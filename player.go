@@ -38,5 +38,5 @@ func (p *Player) IsAt(position Position) bool {
 
 func (p *Player) Shoot(e Entity) {
 	ePos := NewPosition(p.position.row+1, p.position.col)
-	board.InsertEntity(e, ePos)
+	_BOARD.InsertEntity(e, ePos) // TODO: Make this an event trigger
 }

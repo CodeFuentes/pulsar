@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	_DEFAULT_SPEED = 3000 * time.Millisecond
+	_DEFAULT_SPEED = 1 * time.Second
 )
 
 type IGenerator interface {

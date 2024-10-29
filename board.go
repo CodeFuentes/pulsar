@@ -56,7 +56,7 @@ func (b *Board) PulsableHandler(p *Pulsable) {
 		if printedAll {
 			if firstPrintedAll {
 				endPos := NewPosition(row, col+p.Len())
-				board.RemoveEntity(endPos)
+				b.RemoveEntity(endPos)
 			} else {
 				firstPrintedAll = true
 			}
@@ -87,10 +87,6 @@ func (b *Board) Height() int {
 }
 
 func (b *Board) InsertEntity(e Entity, p Position) bool {
-	if !b.EntityHasValidPosition(e) {
-		return false
-	}
-
 	if b.GetEntity(p) != EMPTY {
 		return false
 	}
@@ -131,7 +127,7 @@ func (b *Board) IsPositionEmpty(p Position) bool {
 }
 
 func (b *Board) IsPositionBorder(p Position) bool {
-	return b.entities[p.row][p.col].IsBorder()
+	return false
 }
 
 func (b *Board) GetNewPulsableOrigin() Position {
@@ -175,7 +171,7 @@ func (b *Board) GetPlayer() (*Player, bool) {
 func (b *Board) MovePlayerUp() *Board {
 	b.player.position.row--
 	if b.IsPositionBorder(b.player.position) {
-		b.player.position.row = b.Height() - 1 - BORDER_WIDTH
+		b.player.position.row = b.Height() - 1
 	}
 	return b
 }
@@ -183,7 +179,7 @@ func (b *Board) MovePlayerUp() *Board {
 func (b *Board) MovePlayerDown() *Board {
 	b.player.position.row++
 	if b.IsPositionBorder(b.player.position) {
-		b.player.position.row = 0 + BORDER_WIDTH
+		b.player.position.row = 0
 	}
 	return b
 }
@@ -191,7 +187,7 @@ func (b *Board) MovePlayerDown() *Board {
 func (b *Board) MovePlayerLeft() *Board {
 	b.player.position.col--
 	if b.IsPositionBorder(b.player.position) {
-		b.player.position.col = b.Width() - 1 - BORDER_WIDTH
+		b.player.position.col = b.Width() - 1
 	}
 	return b
 }
@@ -199,7 +195,7 @@ func (b *Board) MovePlayerLeft() *Board {
 func (b *Board) MovePlayerRight() *Board {
 	b.player.position.col++
 	if b.IsPositionBorder(b.player.position) {
-		b.player.position.col = 0 + BORDER_WIDTH
+		b.player.position.col = 0
 	}
 	return b
 }
