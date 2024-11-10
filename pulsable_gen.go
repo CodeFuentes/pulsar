@@ -13,15 +13,15 @@ type DefaultPulsableGenerator struct {
 	*PulsableGenerator
 }
 
-func NewDefaultGenerator(b *Board) *DefaultPulsableGenerator {
+func NewDefaultGenerator() *DefaultPulsableGenerator {
 	return &DefaultPulsableGenerator{
-		PulsableGenerator: NewPulsableGenerator(_DEFAULT_SPEED, b),
+		PulsableGenerator: NewPulsableGenerator(_DEFAULT_SPEED),
 	}
 }
 
-func NewPulsableGenerator(s time.Duration, b *Board) *PulsableGenerator {
+func NewPulsableGenerator(s time.Duration) *PulsableGenerator {
 	return &PulsableGenerator{
-		NewGenerator(s, b),
+		NewGenerator(s),
 	}
 }
 

@@ -1,10 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -13,52 +13,53 @@ import (
 const (
 	WINDOW_TITLE = "PULSAR"
 
-	FONT_SIZE_WIDTH  = 8
-	FONT_SIZE_HEIGHT = 14
+	_FONT_SIZE_WIDTH  = 8
+	_FONT_SIZE_HEIGHT = 14
 )
 
 type Game struct{}
 
 var _BOARD *Board
-var b []rune
-var lastUpdate time.Time
+var b string
 
 func (g *Game) Update() error {
-	if time.Since(lastUpdate) > time.Millisecond*300 {
-		player, hasPlayer := _BOARD.GetPlayer()
-		if hasPlayer {
-			_BOARD.UpdateEntity(player.GetEntity(), player.GetPosition())
-		}
+	err := input()
+	if err != nil {
+		return err
+	}
 
-		b = []rune{}
-		for row := range _BOARD.entities {
-			for col := range _BOARD.entities[row] {
-				entity := _BOARD.entities[row][col]
-				b = append(b, rune(entity))
-			}
-			b = append(b, '\n')
+	player, hasPlayer := _BOARD.GetPlayer()
+	playerPos := player.GetPosition()
+	if hasPlayer {
+		_BOARD.entities[playerPos.row][playerPos.col] = PLAYER
+	}
+
+	b = ""
+	for row := range _BOARD.entities {
+		for col := range _BOARD.entities[row] {
+			entity := _BOARD.entities[row][col]
+			b += entity.String()
 		}
-		lastUpdate = time.Now()
+		b += "\n"
 	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, string(b), 0, 0)
+	ebitenutil.DebugPrintAt(screen, b, 0, 0)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return _BOARD.Width() * FONT_SIZE_WIDTH, _BOARD.Height() * FONT_SIZE_HEIGHT
+	return _BOARD.Width() * _FONT_SIZE_WIDTH, _BOARD.Height() * _FONT_SIZE_HEIGHT
 }
 
 func main() {
 	_BOARD = NewBoard(60, 30)
-	// player := NewPlayer(PLAYER, _BOARD.GetDefaultPlayerPosition())
-	player := NewPlayer(PLAYER, NewPosition(0, 0))
+	player := NewPlayer(PLAYER, _BOARD.GetDefaultPlayerPosition())
 	_BOARD.SetPlayer(player)
-	_BOARD.SetGenerator(NewDefaultGenerator(_BOARD)) // TODO: Refactor
+	_BOARD.SetGenerator(NewDefaultGenerator())
 
-	ebiten.SetWindowSize(1024, 512)
+	ebiten.SetWindowSize(_BOARD.Width()*_FONT_SIZE_WIDTH, _BOARD.Height()*_FONT_SIZE_HEIGHT)
 	ebiten.SetWindowTitle(WINDOW_TITLE)
 
 	ebiten.SetTPS(30)
@@ -68,38 +69,48 @@ func main() {
 	}
 }
 
-/*
-func input(event *tcell.EventKey) *tcell.EventKey {
+func input() error {
 
-		player, ok := _BOARD.GetPlayer()
-		if !ok {
-			panic("no player set")
-		}
-
-		currentPlayerPosition := player.GetPosition()
-		_BOARD.RemoveEntity(currentPlayerPosition)
-		switch event.Key() {
-		case tcell.KeyUp:
-			_BOARD.MovePlayerUp()
-		case tcell.KeyDown:
-			_BOARD.MovePlayerDown()
-		case tcell.KeyLeft:
-			_BOARD.MovePlayerLeft()
-		case tcell.KeyRight:
-			_BOARD.MovePlayerRight()
-		case tcell.KeyEsc:
-			game.Stop()
-			exit(nil)
-		case tcell.KeyRune:
-			r := event.Rune()
-			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-				player.Shoot(Entity(r))
-			}
-		}
-
-		return nil
+	player, ok := _BOARD.GetPlayer()
+	if !ok {
+		panic("no player set")
 	}
-*/
+
+	inputChars := []rune{}
+	ebiten.AppendInputChars(inputChars)
+	for _, r := range inputChars {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			player.Shoot(Entity(r))
+		}
+	}
+
+	removePlayer := func() {
+		currentPlayerPosition := player.GetPosition()
+		_BOARD.entities[currentPlayerPosition.row][currentPlayerPosition.col] = EMPTY
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		removePlayer()
+		_BOARD.MovePlayerUp()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		removePlayer()
+		_BOARD.MovePlayerDown()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		removePlayer()
+		_BOARD.MovePlayerLeft()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		removePlayer()
+		_BOARD.MovePlayerRight()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		return errors.New("User pressed close button...")
+	}
+
+	return nil
+}
 
 func exit(err error) {
 	if err != nil {

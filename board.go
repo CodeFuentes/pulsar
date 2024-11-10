@@ -37,10 +37,11 @@ func (b *Board) SetGenerator(gen IGenerator) {
 		for {
 			select {
 			case <-time.After(b.generator.GetGenSpeed()):
-				p := NewPosition(rand.Intn(b.Height()-1)+1, b.Width()-1)
+				p := NewPosition(rand.Intn(b.Height()-1)+1, b.Width()-2)
 				pulsable := NewRandomPulsable(p)
 				go b.PulsableHandler(pulsable)
 			case <-b.stopGen:
+				// TODO: Clear previous' generator pulsables
 				break GEN
 			}
 		}
@@ -51,12 +52,12 @@ func (b *Board) PulsableHandler(p *Pulsable) {
 	firstPrintedAll := false
 	for i := 1; i < b.Width()-1; i++ {
 		row, col := p.GetPosition().Row(), p.GetPosition().Col()
-		printedAll := b.InsertPulsable(*p, p.GetPosition())
+		insertedAll := b.InsertWholePulsable(*p, p.GetPosition())
 		p.SetPosition(NewPosition(row, col-1))
-		if printedAll {
+		if insertedAll {
 			if firstPrintedAll {
 				endPos := NewPosition(row, col+p.Len())
-				b.RemoveEntity(endPos)
+				b.entities[endPos.Row()][endPos.Col()] = EMPTY
 			} else {
 				firstPrintedAll = true
 			}
@@ -65,12 +66,17 @@ func (b *Board) PulsableHandler(p *Pulsable) {
 	}
 }
 
-func (b *Board) InsertPulsable(p Pulsable, pos Position) bool {
-	for i, e := range p.GetBody() {
-		ok := b.UpdateEntity(Entity(e), NewPosition(pos.Row(), pos.Col()+i))
-		if !ok {
+func (b *Board) InsertWholePulsable(p Pulsable, pos Position) bool {
+	for i := range p.GetBody() {
+		if !b.IsPositionWithinBorders(pos) {
 			return false
 		}
+		if b.entities[pos.Row()][pos.Col()] == EMPTY {
+			b.entities[pos.Row()][pos.Col()] = Entity(p.GetBody()[i])
+		}
+	}
+	if !b.IsPositionWithinBorders(NewPosition(pos.Row(), pos.Col()+p.Len()+1)) {
+		return false
 	}
 	return true
 }
@@ -86,38 +92,6 @@ func (b *Board) Height() int {
 	return len(b.entities)
 }
 
-func (b *Board) InsertEntity(e Entity, p Position) bool {
-	if b.GetEntity(p) != EMPTY {
-		return false
-	}
-
-	b.entities[p.row][p.col] = e
-	return true
-}
-
-func (b *Board) RemoveEntity(p Position) bool {
-	if b.IsPositionEmpty(p) {
-		return false
-	}
-	b.entities[p.row][p.col] = EMPTY
-	return true
-}
-
-func (b *Board) UpdateEntity(e Entity, p Position) bool {
-	if !b.IsPositionWithinBorders(p) {
-		return false
-	}
-	if b.IsPositionEmpty(p) {
-		return b.InsertEntity(e, p)
-	}
-	currentEntityPos, ok := b.GetEntityPosition(e)
-	if ok {
-		b.RemoveEntity(currentEntityPos)
-	}
-	b.entities[p.row][p.col] = e
-	return true
-}
-
 func (b *Board) GetEntity(p Position) Entity {
 	return b.entities[p.row][p.col]
 }
@@ -127,6 +101,9 @@ func (b *Board) IsPositionEmpty(p Position) bool {
 }
 
 func (b *Board) IsPositionBorder(p Position) bool {
+	if p.Col() == 0 || p.Row() == 0 || p.Col() == b.Width()-1 || p.Row() == b.Height()-1 {
+		return true
+	}
 	return false
 }
 
@@ -169,34 +146,38 @@ func (b *Board) GetPlayer() (*Player, bool) {
 }
 
 func (b *Board) MovePlayerUp() *Board {
-	b.player.position.row--
 	if b.IsPositionBorder(b.player.position) {
 		b.player.position.row = b.Height() - 1
+		return b
 	}
+	b.player.position.row--
 	return b
 }
 
 func (b *Board) MovePlayerDown() *Board {
-	b.player.position.row++
 	if b.IsPositionBorder(b.player.position) {
 		b.player.position.row = 0
+		return b
 	}
+	b.player.position.row++
 	return b
 }
 
 func (b *Board) MovePlayerLeft() *Board {
-	b.player.position.col--
 	if b.IsPositionBorder(b.player.position) {
 		b.player.position.col = b.Width() - 1
+		return b
 	}
+	b.player.position.col--
 	return b
 }
 
 func (b *Board) MovePlayerRight() *Board {
-	b.player.position.col++
 	if b.IsPositionBorder(b.player.position) {
 		b.player.position.col = 0
+		return b
 	}
+	b.player.position.col++
 	return b
 }
 

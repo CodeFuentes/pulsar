@@ -1,7 +1,7 @@
 package main
 
 const (
-	DEFAULT_PLAYER_SPEED = 10
+	DEFAULT_PLAYER_SPEED = 1
 )
 
 type Player struct {
@@ -38,5 +38,5 @@ func (p *Player) IsAt(position Position) bool {
 
 func (p *Player) Shoot(e Entity) {
 	ePos := NewPosition(p.position.row+1, p.position.col)
-	_BOARD.InsertEntity(e, ePos) // TODO: Make this an event trigger
+	_BOARD.entities[ePos.Row()][ePos.Col()] = e // TODO: Make this an event trigger
 }
